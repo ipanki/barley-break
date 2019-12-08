@@ -86,8 +86,8 @@ game_state new_game(){
     gs.board[BOARD_SIZE - 1][BOARD_SIZE - 1] = 0;
     gs.row = BOARD_SIZE - 1;
     gs.col = BOARD_SIZE - 1;
-    gs.moves = 0;
     shuffle_board(&gs);
+    gs.moves = 0;
     return gs;
 }
 
@@ -123,6 +123,7 @@ void print_board(game_state *gs){
          printf("\n+--+--+--+--+\n");
     }
     printf("\n");
+    printf("Количество шагов:  %d\n", gs->moves);
 }
 
 int main()
