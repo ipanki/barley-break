@@ -3,143 +3,120 @@
 #include <stdbool.h>
 #include <time.h>
 
-const int GRID_SIZE = 4;
+const int BOARD_SIZE = 4;
 const int SHUFFLE_COUNT = 3;
 
-bool win(int n, char grid[GRID_SIZE][GRID_SIZE]){
-    int row, col;
-    int v;
-    if(grid[n-1][n-1] != 0){
+typedef struct
+{
+    uint8_t row;                     // Номер строки с пустой клеткой
+    uint8_t col;                     // Номер стоолбца с пустой клеткой
+    char board[BOARD_SIZE][BOARD_SIZE]; // Игровая доска
+    uint32_t moves;                  // Количество шагов
+} game_state;
+
+bool move_up(game_state *gs){
+    if(gs->row == 0)
+        return false;
+    gs->board[gs->row][gs->col] = gs->board[gs->row-1][gs->col];
+    gs->board[gs->row-1][gs->col] = 0;
+    gs->moves++;
+    gs->row--;
+    return true;
+}
+
+bool move_down(game_state *gs){
+    if(gs->row == BOARD_SIZE -1)
+        return false;
+    gs->board[gs->row][gs->col] = gs->board[gs->row+1][gs->col];
+    gs->board[gs->row+1][gs->col] = 0;
+    gs->moves++;
+    gs->row++;
+    return true;
+}
+
+bool move_left(game_state *gs){
+    if(gs->col == 0)
+        return false;
+    gs->board[gs->row][gs->col] = gs->board[gs->row][gs->col-1];
+    gs->board[gs->row][gs->col-1] = 0;
+    gs->moves++;
+    gs->col--;
+    return true;
+}
+
+bool move_right(game_state *gs){
+    if(gs->col == BOARD_SIZE -1)
+        return false;
+    gs->board[gs->row][gs->col] = gs->board[gs->row][gs->col+1];
+    gs->board[gs->row][gs->col+1] = 0;
+    gs->moves++;
+    gs->col++;
+    return true;
+}
+
+void shuffle_board(game_state *gs){
+    time_t t;
+    srand((unsigned) time(&t));
+    for(int i = 0; i < SHUFFLE_COUNT;){
+        int d = rand() % BOARD_SIZE;
+        switch (d){
+        case 0:
+            move_left(gs) && i++;
+            break;
+        case 1:
+            move_up(gs) && i++;
+            break;
+        case 2:
+            move_right(gs) && i++;
+            break;
+        case 3:
+            move_down(gs) && i++;
+            break;
+        }
+    }
+}
+
+game_state new_game(){
+    game_state gs;
+    for(int row = 0; row < BOARD_SIZE; row++){
+        for(int col = 0; col < BOARD_SIZE; col++){
+            gs.board[row][col] = row * BOARD_SIZE + col + 1;
+        }
+    }
+    gs.board[BOARD_SIZE - 1][BOARD_SIZE - 1] = 0;
+    gs.row = BOARD_SIZE - 1;
+    gs.col = BOARD_SIZE - 1;
+    gs.moves = 0;
+    shuffle_board(&gs);
+    return gs;
+}
+
+bool win(game_state *gs){
+    if(gs->col != BOARD_SIZE - 1 && gs->row != BOARD_SIZE - 1){
         return false;
     }
-    for(int i=0; i< n*n-1; i++){
-        row = i / n;
-        col = i % n;
-        if(grid[row][col] != i+1){
+    int row, col;
+    for(int i=0; i< BOARD_SIZE * BOARD_SIZE - 1; i++){
+        row = i / BOARD_SIZE;
+        col = i % BOARD_SIZE;
+        if(gs->board[row][col] != i + 1){
             return false;
         }
     }
     return true;
 }
-bool move_up(int n, char grid[GRID_SIZE][GRID_SIZE]){
-    int row, col;
-    for(row = 0; row<n; row++){
-        for(col=0; col<n; col++){
-            if(grid[row][col] == 0){
-                break;
-            }
-        }
-        if(grid[row][col] == 0){
-            break;
-        }
-    }
-    if(row == 0)
-        return false;
-    grid[row][col] = grid[row-1][col];
-    grid[row-1][col] = 0;
 
-    return true;
-}
 
-bool move_down(int n, char grid[GRID_SIZE][GRID_SIZE]){
-    int row, col;
-    for(row = 0; row<n; row++){
-        for(col=0; col<n; col++){
-            if(grid[row][col] == 0){
-                break;
-            }
-        }
-        if(grid[row][col] == 0){
-            break;
-        }
-    }
-    if(row == n-1)
-        return false;
-    grid[row][col] = grid[row+1][col];
-    grid[row+1][col] = 0;
-
-    return true;
-}
-
-bool move_left(int n, char grid[GRID_SIZE][GRID_SIZE]){
-    int row, col;
-    for(row = 0; row<n; row++){
-        for(col=0; col<n; col++){
-            if(grid[row][col] == 0){
-                break;
-            }
-        }
-        if(grid[row][col] == 0){
-            break;
-        }
-    }
-    if(col == 0)
-        return false;
-    grid[row][col] = grid[row][col-1];
-    grid[row][col-1] = 0;
-    return true;
-}
-bool move_right(int n, char grid[GRID_SIZE][GRID_SIZE]){
-    int row, col;
-    for(row = 0; row<n; row++){
-        for(col=0; col<n; col++){
-            if(grid[row][col] == 0){
-                break;
-            }
-        }
-        if(grid[row][col] == 0){
-            break;
-        }
-    }
-    if(col == n-1)
-        return false;
-    grid[row][col] = grid[row][col+1];
-    grid[row][col+1] = 0;
-
-    return true;
-}
-
-void shuffle(int n, grid[GRID_SIZE][GRID_SIZE]){
-    time_t t;
-    srand((unsigned) time(&t));
-    for(int i = 0; i < SHUFFLE_COUNT;){
-        int d = rand() % n;
-        switch (d){
-        case 0:
-            move_left(n, grid) && i++;
-            break;
-        case 1:
-            move_up(n, grid) && i++;
-            break;
-        case 2:
-            move_right(n, grid) && i++;
-            break;
-        case 3:
-            move_down(n, grid) && i++;
-            break;
-        }
-    }
-}
-
-void init_grid(int n, char grid[GRID_SIZE][GRID_SIZE]){
-    for(int row = 0; row<n; row++){
-        for(int col=0; col<n; col++){
-            grid[row][col] = row * GRID_SIZE + col + 1;
-        }
-    }
-    grid[n-1][n-1] = 0;
-}
-
-void print_grid(int n, char grid[GRID_SIZE][GRID_SIZE]){
+void print_board(game_state *gs){
     printf("\n+--+--+--+--+\n");
-    for(int row = 0; row<n; row++){
+    for(int row = 0; row < BOARD_SIZE; row++){
         printf("|");
-        for( int col=0 ; col<n; col++){
-            if(grid[row][col] == 0){
+        for( int col = 0 ; col < BOARD_SIZE; col++){
+            if(gs->board[row][col] == 0){
                 printf("  |");
             }
             else{
-            printf("%02d|", grid[row][col]);
+            printf("%02d|", gs->board[row][col]);
             }
 
         }
@@ -151,24 +128,25 @@ void print_grid(int n, char grid[GRID_SIZE][GRID_SIZE]){
 int main()
 {
     system("clear");
-    char grid[GRID_SIZE][GRID_SIZE];
-    init_grid(GRID_SIZE, grid);
-    shuffle(GRID_SIZE, grid);
-    print_grid(GRID_SIZE, grid);
+
+    game_state gs = new_game();
+
     for(bool exit = false; !exit;){
+        system("clear");
+        print_board(&gs);
         char key = getchar();
         switch (key){
         case 'd':
-            move_left(GRID_SIZE, grid);
+            move_left(&gs);
             break;
         case 's':
-            move_up(GRID_SIZE, grid);
+            move_up(&gs);
             break;
         case 'a':
-            move_right(GRID_SIZE, grid);
+            move_right(&gs);
             break;
         case 'w':
-            move_down(GRID_SIZE, grid);
+            move_down(&gs);
             break;
         case 'e':
             exit = true;
@@ -176,9 +154,7 @@ int main()
         default:
             continue;
         }
-        system("clear");
-        print_grid(GRID_SIZE, grid);
-        if(win(GRID_SIZE, grid)){
+        if(win(&gs)){
             printf("Вы выиграли!\n");
             break;
         }
