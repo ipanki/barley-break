@@ -1,0 +1,5 @@
+.vscode
+*.pro
+*.pro.*
+*.dSYM
+main
