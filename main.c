@@ -2,64 +2,74 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <time.h>
+#include <ctype.h>
 
-const int BOARD_SIZE = 4;
-const int SHUFFLE_COUNT = 3;
+typedef char byte;
+
+#define BOARD_SIZE 4
+#define SHUFFLE_COUNT 5
 
 typedef struct
 {
-    uint8_t row;                     // Номер строки с пустой клеткой
-    uint8_t col;                     // Номер стоолбца с пустой клеткой
-    char board[BOARD_SIZE][BOARD_SIZE]; // Игровая доска
-    uint32_t moves;                  // Количество шагов
+    byte board[BOARD_SIZE][BOARD_SIZE]; // Игровая доска
+    byte row;                           // Номер строки с пустой клеткой
+    byte col;                           // Номер стоолбца с пустой клеткой
+    unsigned int moves;                 // Количество шагов
 } game_state;
 
-bool move_up(game_state *gs){
-    if(gs->row == 0)
+bool move_up(game_state *gs)
+{
+    if (gs->row == 0)
         return false;
-    gs->board[gs->row][gs->col] = gs->board[gs->row-1][gs->col];
-    gs->board[gs->row-1][gs->col] = 0;
+    gs->board[gs->row][gs->col] = gs->board[gs->row - 1][gs->col];
+    gs->board[gs->row - 1][gs->col] = 0;
     gs->moves++;
     gs->row--;
     return true;
 }
 
-bool move_down(game_state *gs){
-    if(gs->row == BOARD_SIZE -1)
+bool move_down(game_state *gs)
+{
+    if (gs->row == BOARD_SIZE - 1)
         return false;
-    gs->board[gs->row][gs->col] = gs->board[gs->row+1][gs->col];
-    gs->board[gs->row+1][gs->col] = 0;
+    gs->board[gs->row][gs->col] = gs->board[gs->row + 1][gs->col];
+    gs->board[gs->row + 1][gs->col] = 0;
     gs->moves++;
     gs->row++;
     return true;
 }
 
-bool move_left(game_state *gs){
-    if(gs->col == 0)
+bool move_left(game_state *gs)
+{
+    if (gs->col == 0)
         return false;
-    gs->board[gs->row][gs->col] = gs->board[gs->row][gs->col-1];
-    gs->board[gs->row][gs->col-1] = 0;
+    gs->board[gs->row][gs->col] = gs->board[gs->row][gs->col - 1];
+    gs->board[gs->row][gs->col - 1] = 0;
     gs->moves++;
     gs->col--;
     return true;
 }
 
-bool move_right(game_state *gs){
-    if(gs->col == BOARD_SIZE -1)
+bool move_right(game_state *gs)
+{
+    if (gs->col == BOARD_SIZE - 1)
         return false;
-    gs->board[gs->row][gs->col] = gs->board[gs->row][gs->col+1];
-    gs->board[gs->row][gs->col+1] = 0;
+    gs->board[gs->row][gs->col] = gs->board[gs->row][gs->col + 1];
+    gs->board[gs->row][gs->col + 1] = 0;
     gs->moves++;
     gs->col++;
     return true;
 }
 
-void shuffle_board(game_state *gs){
+void shuffle_board(game_state *gs)
+{
     time_t t;
-    srand((unsigned) time(&t));
-    for(int i = 0; i < SHUFFLE_COUNT;){
+    srand((unsigned)time(&t));
+    for (int i = 0; i < SHUFFLE_COUNT;)
+    {
         int d = rand() % BOARD_SIZE;
-        switch (d){
+        switch (d)
+        {
         case 0:
             move_left(gs) && i++;
             break;
@@ -76,10 +86,13 @@ void shuffle_board(game_state *gs){
     }
 }
 
-game_state new_game(){
+game_state new_game()
+{
     game_state gs;
-    for(int row = 0; row < BOARD_SIZE; row++){
-        for(int col = 0; col < BOARD_SIZE; col++){
+    for (byte row = 0; row < BOARD_SIZE; row++)
+    {
+        for (byte col = 0; col < BOARD_SIZE; col++)
+        {
             gs.board[row][col] = row * BOARD_SIZE + col + 1;
         }
     }
@@ -91,36 +104,51 @@ game_state new_game(){
     return gs;
 }
 
-bool win(game_state *gs){
-    if(gs->col != BOARD_SIZE - 1 && gs->row != BOARD_SIZE - 1){
+bool check_win(game_state *gs)
+{
+    if (gs->col != BOARD_SIZE - 1 && gs->row != BOARD_SIZE - 1)
+    {
         return false;
     }
     int row, col;
-    for(int i=0; i< BOARD_SIZE * BOARD_SIZE - 1; i++){
+    for (int i = 0; i < BOARD_SIZE * BOARD_SIZE - 1; i++)
+    {
         row = i / BOARD_SIZE;
         col = i % BOARD_SIZE;
-        if(gs->board[row][col] != i + 1){
+        if (gs->board[row][col] != i + 1)
+        {
             return false;
         }
     }
     return true;
 }
 
-
-void print_board(game_state *gs){
+void print_game(game_state *gs)
+{
+    system("clear");
+    printf("Куросвая работа игра \"Пятнашки\". Панько Д.А.\n");
+    printf("--------------------------------------------\n");
+    printf("Подсказка:\n");
+    printf("    WASD - управление\n");
+    printf("    N - начать заново\n");
+    printf("    E - выход\n");
+    printf("--------------------------------------------\n");
     printf("\n+--+--+--+--+\n");
-    for(int row = 0; row < BOARD_SIZE; row++){
+    for (int row = 0; row < BOARD_SIZE; row++)
+    {
         printf("|");
-        for( int col = 0 ; col < BOARD_SIZE; col++){
-            if(gs->board[row][col] == 0){
+        for (int col = 0; col < BOARD_SIZE; col++)
+        {
+            if (gs->board[row][col] == 0)
+            {
                 printf("  |");
             }
-            else{
-            printf("%02d|", gs->board[row][col]);
+            else
+            {
+                printf("%02d|", gs->board[row][col]);
             }
-
         }
-         printf("\n+--+--+--+--+\n");
+        printf("\n+--+--+--+--+\n");
     }
     printf("\n");
     printf("Количество шагов:  %d\n", gs->moves);
@@ -128,15 +156,16 @@ void print_board(game_state *gs){
 
 int main()
 {
-    system("clear");
-
+    bool play = true;
     game_state gs = new_game();
 
-    for(bool exit = false; !exit;){
-        system("clear");
-        print_board(&gs);
-        char key = getchar();
-        switch (key){
+    do
+    {
+        print_game(&gs);
+        printf("Ввведите команду:\n");
+        int key = tolower(getchar());
+        switch (key)
+        {
         case 'd':
             move_left(&gs);
             break;
@@ -149,16 +178,22 @@ int main()
         case 'w':
             move_down(&gs);
             break;
+        case 'n':
+            gs = new_game();
+            break;
         case 'e':
-            exit = true;
+            play = false;
             continue;
         default:
             continue;
         }
-        if(win(&gs)){
+        if (check_win(&gs))
+        {
+            print_game(&gs);
             printf("Вы выиграли!\n");
             break;
         }
-    }
-    return 0;
+    } while (play);
+
+    return true;
 }
