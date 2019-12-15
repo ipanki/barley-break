@@ -1,1 +1,3 @@
+LDFLAGS = -lncurses
+
 all: main
